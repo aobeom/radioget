@@ -1,0 +1,527 @@
+[
+    {
+        "id": "HBC",
+        "name": "ＨＢＣラジオ<",
+        "area_id": "JP1"
+    },
+    {
+        "id": "STV",
+        "name": "ＳＴＶラジオ",
+        "area_id": "JP1"
+    },
+    {
+        "id": "AIR-G",
+        "name": "AIR-G'（FM北海道）",
+        "area_id": "JP1"
+    },
+    {
+        "id": "NORTHWAVE",
+        "name": "FM NORTH WAVE",
+        "area_id": "JP1"
+    },
+    {
+        "id": "RAB",
+        "name": "ＲＡＢ青森放送",
+        "area_id": "JP2"
+    },
+    {
+        "id": "AFB",
+        "name": "エフエム青森",
+        "area_id": "JP2"
+    },
+    {
+        "id": "IBC",
+        "name": "IBCラジオ",
+        "area_id": "JP3"
+    },
+    {
+        "id": "FMI",
+        "name": "エフエム岩手",
+        "area_id": "JP3"
+    },
+    {
+        "id": "TBC",
+        "name": "TBCラジオ",
+        "area_id": "JP4"
+    },
+    {
+        "id": "DATEFM",
+        "name": "Date fm エフエム仙台",
+        "area_id": "JP4"
+    },
+    {
+        "id": "ABS",
+        "name": "ＡＢＳ秋田放送",
+        "area_id": "JP5"
+    },
+    {
+        "id": "YBC",
+        "name": "YBC山形放送",
+        "area_id": "JP6"
+    },
+    {
+        "id": "RFC",
+        "name": "RFCラジオ福島",
+        "area_id": "JP7"
+    },
+    {
+        "id": "FMF",
+        "name": "ふくしまFM",
+        "area_id": "JP7"
+    },
+    {
+        "id": "JOIK",
+        "name": "NHKラジオ第1（札幌）",
+        "area_id": "JP1"
+    },
+    {
+        "id": "JOHK",
+        "name": "NHKラジオ第1（仙台）",
+        "area_id": "JP4"
+    },
+    {
+        "id": "TBS",
+        "name": "TBSラジオ",
+        "area_id": "JP13"
+    },
+    {
+        "id": "QRR",
+        "name": "文化放送",
+        "area_id": "JP13"
+    },
+    {
+        "id": "LFR",
+        "name": "ニッポン放送",
+        "area_id": "JP13"
+    },
+    {
+        "id": "INT",
+        "name": "InterFM897",
+        "area_id": "JP13"
+    },
+    {
+        "id": "FMT",
+        "name": "TOKYO FM",
+        "area_id": "JP13"
+    },
+    {
+        "id": "FMJ",
+        "name": "J-WAVE",
+        "area_id": "JP13"
+    },
+    {
+        "id": "JORF",
+        "name": "ラジオ日本",
+        "area_id": "JP13"
+    },
+    {
+        "id": "BAYFM78",
+        "name": "bayfm78",
+        "area_id": "JP12"
+    },
+    {
+        "id": "NACK5",
+        "name": "NACK5",
+        "area_id": "JP11"
+    },
+    {
+        "id": "YFM",
+        "name": "ＦＭヨコハマ",
+        "area_id": "JP14"
+    },
+    {
+        "id": "IBS",
+        "name": "IBS茨城放送",
+        "area_id": "JP8"
+    },
+    {
+        "id": "CRT",
+        "name": "CRT栃木放送",
+        "area_id": "JP9"
+    },
+    {
+        "id": "RADIOBERRY",
+        "name": "RadioBerry",
+        "area_id": "JP9"
+    },
+    {
+        "id": "FMGUNMA",
+        "name": "FM GUNMA",
+        "area_id": "JP10"
+    },
+    {
+        "id": "JOAK",
+        "name": "NHKラジオ第1（東京）",
+        "area_id": "JP13"
+    },
+    {
+        "id": "BSN",
+        "name": "ＢＳＮラジオ",
+        "area_id": "JP15"
+    },
+    {
+        "id": "FMNIIGATA",
+        "name": "FM NIIGATA",
+        "area_id": "JP15"
+    },
+    {
+        "id": "FMPORT",
+        "name": "FM PORT",
+        "area_id": "JP15"
+    },
+    {
+        "id": "KNB",
+        "name": "ＫＮＢラジオ",
+        "area_id": "JP16"
+    },
+    {
+        "id": "FMTOYAMA",
+        "name": "ＦＭとやま",
+        "area_id": "JP16"
+    },
+    {
+        "id": "MRO",
+        "name": "MRO北陸放送ラジオ",
+        "area_id": "JP17"
+    },
+    {
+        "id": "HELLOFIVE",
+        "name": "エフエム石川",
+        "area_id": "JP17"
+    },
+    {
+        "id": "FBC",
+        "name": "FBCラジオ",
+        "area_id": "JP18"
+    },
+    {
+        "id": "FMFUKUI",
+        "name": "FM福井",
+        "area_id": "JP18"
+    },
+    {
+        "id": "YBS",
+        "name": "ＹＢＳラジオ",
+        "area_id": "JP19"
+    },
+    {
+        "id": "FM-FUJI",
+        "name": "FM FUJI",
+        "area_id": "JP19"
+    },
+    {
+        "id": "SBC",
+        "name": "SBCラジオ",
+        "area_id": "JP20"
+    },
+    {
+        "id": "FMN",
+        "name": "ＦＭ長野",
+        "area_id": "JP20"
+    },
+    {
+        "id": "CBC",
+        "name": "CBCラジオ",
+        "area_id": "JP23"
+    },
+    {
+        "id": "TOKAIRADIO",
+        "name": "東海ラジオ",
+        "area_id": "JP23"
+    },
+    {
+        "id": "GBS",
+        "name": "ぎふチャン",
+        "area_id": "JP21"
+    },
+    {
+        "id": "ZIP-FM",
+        "name": "ZIP-FM",
+        "area_id": "JP23"
+    },
+    {
+        "id": "RADIONEO",
+        "name": "RADIO NEO",
+        "area_id": "JP23"
+    },
+    {
+        "id": "FMAICHI",
+        "name": "＠ＦＭ",
+        "area_id": "JP23"
+    },
+    {
+        "id": "FMGIFU",
+        "name": "ＦＭ ＧＩＦＵ",
+        "area_id": "JP21"
+    },
+    {
+        "id": "SBS",
+        "name": "SBSラジオ",
+        "area_id": "JP22"
+    },
+    {
+        "id": "K-MIX",
+        "name": "K-MIX SHIZUOKA",
+        "area_id": "JP22"
+    },
+    {
+        "id": "FMMIE",
+        "name": "レディオキューブ ＦＭ三重",
+        "area_id": "JP24"
+    },
+    {
+        "id": "JOCK",
+        "name": "NHKラジオ第1（名古屋）",
+        "area_id": "JP23"
+    },
+    {
+        "id": "ABC",
+        "name": "ABCラジオ",
+        "area_id": "JP27"
+    },
+    {
+        "id": "MBS",
+        "name": "MBSラジオ",
+        "area_id": "JP27"
+    },
+    {
+        "id": "OBC",
+        "name": "OBCラジオ大阪",
+        "area_id": "JP27"
+    },
+    {
+        "id": "CCL",
+        "name": "FM COCOLO",
+        "area_id": "JP27"
+    },
+    {
+        "id": "802",
+        "name": "FM802",
+        "area_id": "JP27"
+    },
+    {
+        "id": "FMO",
+        "name": "FM OH!",
+        "area_id": "JP27"
+    },
+    {
+        "id": "KISSFMKOBE",
+        "name": "Kiss FM KOBE",
+        "area_id": "JP28"
+    },
+    {
+        "id": "CRK",
+        "name": "ラジオ関西",
+        "area_id": "JP28"
+    },
+    {
+        "id": "E-RADIO",
+        "name": "e-radio FM滋賀",
+        "area_id": "JP25"
+    },
+    {
+        "id": "KBS",
+        "name": "KBS京都ラジオ ",
+        "area_id": "JP26"
+    },
+    {
+        "id": "ALPHA-STATION",
+        "name": "α-STATION FM京都",
+        "area_id": "JP26"
+    },
+    {
+        "id": "WBS",
+        "name": "wbs和歌山放送",
+        "area_id": "JP30"
+    },
+    {
+        "id": "JOBK",
+        "name": "NHKラジオ第1（大阪）",
+        "area_id": "JP27"
+    },
+    {
+        "id": "BSS",
+        "name": "BSSラジオ",
+        "area_id": "JP31"
+    },
+    {
+        "id": "RSK",
+        "name": "ＲＳＫラジオ",
+        "area_id": "JP33"
+    },
+    {
+        "id": "RCC",
+        "name": "RCCラジオ",
+        "area_id": "JP34"
+    },
+    {
+        "id": "HFM",
+        "name": "広島FM",
+        "area_id": "JP34"
+    },
+    {
+        "id": "KRY",
+        "name": "ＫＲＹ山口放送",
+        "area_id": "JP35"
+    },
+    {
+        "id": "FMY",
+        "name": "エフエム山口",
+        "area_id": "JP35"
+    },
+    {
+        "id": "JRT",
+        "name": "ＪＲＴ四国放送",
+        "area_id": "JP36"
+    },
+    {
+        "id": "RNC",
+        "name": "RNC西日本放送",
+        "area_id": "JP37"
+    },
+    {
+        "id": "FMKAGAWA",
+        "name": "エフエム香川",
+        "area_id": "JP37"
+    },
+    {
+        "id": "RNB",
+        "name": "RNB南海放送",
+        "area_id": "JP38"
+    },
+    {
+        "id": "JOEU-FM",
+        "name": "FM愛媛",
+        "area_id": "JP38"
+    },
+    {
+        "id": "RKC",
+        "name": "RKC高知放送",
+        "area_id": "JP39"
+    },
+    {
+        "id": "JOFK",
+        "name": "NHKラジオ第1（広島）",
+        "area_id": "JP34"
+    },
+    {
+        "id": "JOZK",
+        "name": "NHKラジオ第1（松山）",
+        "area_id": "JP38"
+    },
+    {
+        "id": "RKB",
+        "name": "RKBラジオ",
+        "area_id": "JP40"
+    },
+    {
+        "id": "KBC",
+        "name": "KBCラジオ",
+        "area_id": "JP40"
+    },
+    {
+        "id": "LOVEFM",
+        "name": "LOVE FM",
+        "area_id": "JP40"
+    },
+    {
+        "id": "CROSSFM",
+        "name": "cross fm",
+        "area_id": "JP40"
+    },
+    {
+        "id": "FMFUKUOKA",
+        "name": "FM FUKUOKA",
+        "area_id": "JP40"
+    },
+    {
+        "id": "NBC",
+        "name": "NBC長崎放送",
+        "area_id": "JP42"
+    },
+    {
+        "id": "FMNAGASAKI",
+        "name": "FM長崎",
+        "area_id": "JP42"
+    },
+    {
+        "id": "RKK",
+        "name": "RKKラジオ",
+        "area_id": "JP43"
+    },
+    {
+        "id": "FMK",
+        "name": "FMKエフエム熊本",
+        "area_id": "JP43"
+    },
+    {
+        "id": "OBS",
+        "name": "OBSラジオ",
+        "area_id": "JP44"
+    },
+    {
+        "id": "FM_OITA",
+        "name": "エフエム大分",
+        "area_id": "JP44"
+    },
+    {
+        "id": "MRT",
+        "name": "宮崎放送",
+        "area_id": "JP45"
+    },
+    {
+        "id": "MBC",
+        "name": "ＭＢＣラジオ",
+        "area_id": "JP46"
+    },
+    {
+        "id": "MYUFM",
+        "name": "μＦＭ",
+        "area_id": "JP46"
+    },
+    {
+        "id": "RBC",
+        "name": "RBCiラジオ",
+        "area_id": "JP47"
+    },
+    {
+        "id": "ROK",
+        "name": "ラジオ沖縄",
+        "area_id": "JP47"
+    },
+    {
+        "id": "FM_OKINAWA",
+        "name": "FM沖縄",
+        "area_id": "JP47"
+    },
+    {
+        "id": "JOLK",
+        "name": "NHKラジオ第1（福岡）",
+        "area_id": "JP40"
+    },
+    {
+        "id": "RN1",
+        "name": "ラジオNIKKEI第1 ",
+        "area_id": "JP13"
+    },
+    {
+        "id": "RN2",
+        "name": "ラジオNIKKEI第2",
+        "area_id": "JP13"
+    },
+    {
+        "id": "HOUSOU-DAIGAKU",
+        "name": "放送大学",
+        "area_id": "JP12"
+    },
+    {
+        "id": "JOAB",
+        "name": "NHKラジオ第2",
+        "area_id": "JP13"
+    },
+    {
+        "id": "JOAK-FM",
+        "name": "NHK-FM（東京）",
+        "area_id": "JP13"
+    }
+]
