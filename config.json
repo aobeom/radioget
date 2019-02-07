@@ -3,7 +3,10 @@
     "station_id": "",
     "start_at": "",
     "end_at": "",
-    "encode": false,
+    "next_day": false,
+    "encode": true,
     "save_dir": "",
+    "cover_path": "",
+    "cover_pix": "",
     "proxy": ""
 }

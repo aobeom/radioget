@@ -1,94 +1,117 @@
 # coding=utf-8
 # @author AoBeom
 # @create date 2018-10-04 13:33:50
-# @modify date 2018-10-04 22:20:04
-# @desc [description]
+# @modify date 2019-02-07 15:46:12
+# @desc [radio]
 import argparse
 import base64
 import json
+import multiprocessing
 import os
 import platform
 import re
 import subprocess
+import sys
 import tempfile
 import time
+from multiprocessing.dummy import Pool
 
 import requests
 
-from packages.threadpb import threadProcBar
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 
-class radiko(object):
-    def __init__(self, crond=True, proxies=None):
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
-        }
-        self.workdir = os.path.dirname(os.path.abspath(__file__))
+global_header = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
+}
+session = requests.Session()
+session.headers.update(global_header)
 
-        self.auth1_api = "https://radiko.jp/v2/api/auth1"
-        self.auth2_api = "https://radiko.jp/v2/api/auth2"
-        self.playlist_api = "https://radiko.jp/v2/api/ts/playlist.m3u8"
 
-        self.tmpdir = tempfile.mkdtemp()
+class threadProcBar(object):
+    def __init__(self, func, tasks, pool=multiprocessing.cpu_count()):
+        self.func = func
+        self.tasks = tasks
 
-        self.requests = requests.Session()
+        self.bar_i = 0
+        self.bar_len = 50
+        self.bar_max = len(tasks)
 
-        if crond:
-            self.cfg = self.__checkCfg()
-            proxycfg = self.cfg["proxy"]
-            if proxycfg:
-                proxyinfo = {"http": "http://" + proxycfg, "https": "https://" + proxycfg}
-                self.requests.proxies = proxyinfo
-            if self.cfg["save_dir"] == "":
-                self.save_dir = self.workdir
-            else:
-                self.save_dir = self.cfg["save_dir"]
-            if self.cfg["name"] == "":
-                self.save_name = "Radiko"
-            else:
-                self.save_name = self.cfg["name"]
-            if self.cfg["encode"]:
-                self.isEncode = True
-                self.__checkEncode()
-            else:
-                self.isEncode = False
+        self.p = Pool(pool)
+        self.q = queue.Queue()
+
+    def __dosth(self, percent, task):
+        if percent == self.bar_max:
+            return self.done
         else:
-            if proxies:
-                proxyinfo = {"http": "http://" + proxies, "https": "https://" + proxies}
-                self.requests.proxies = proxyinfo
-            self.save_dir = self.workdir
-            self.save_name = "Radiko"
-            self.isEncode = False
+            self.func(task)
+            return percent
 
-        self.audio_path = ""
-        self.timestamp = ""
+    def worker(self):
+        process_bar = '[' + '>' * 0 + '-' * 0 + ']' + '%.2f' % 0 + '%' + '\r'
+        sys.stdout.write(process_bar)
+        sys.stdout.flush()
+        pool = self.p
+        for i, task in enumerate(self.tasks):
+            try:
+                percent = pool.apply_async(self.__dosth, args=(i, task))
+                self.q.put(percent)
+            except BaseException:
+                break
+
+    def process(self):
+        pool = self.p
+        while 1:
+            result = self.q.get().get()
+            if result == self.bar_max:
+                self.bar_i = self.bar_max
+            else:
+                self.bar_i += 1
+            num_arrow = int(self.bar_i * self.bar_len / self.bar_max)
+            num_line = self.bar_len - num_arrow
+            percent = self.bar_i * 100.0 / self.bar_max
+            process_bar = '[' + '>' * num_arrow + '-' * \
+                num_line + ']' + '%.2f' % percent + '%' + '\r'
+            sys.stdout.write(process_bar)
+            sys.stdout.flush()
+            if result == self.bar_max-1:
+                pool.terminate()
+                break
+        pool.join()
+        self.__close()
+
+    def __close(self):
+        print('')
+
+
+class mediaWorker(object):
+    @classmethod
+    def aac2mp3(cls, raw, save_name, save_dir):
+        name_raw = raw
+        name_mp3 = "{}.mp3".format(save_name)
+        orig_audio = os.path.join(save_dir, name_raw)
+        mp3_audio = os.path.join(save_dir, name_mp3)
+        command = "ffmpeg -y -i {} {}".format(orig_audio, mp3_audio)
+        os.system(command)
+        return mp3_audio
+
+    @classmethod
+    def mp3tomp4(cls, audio_dir, cover_dir, cover_pix):
+        output_path = audio_dir.replace(".mp3", ".mp4")
+        command = 'ffmpeg -r 15 -f image2 -loop 1 -i "{cover}" -i "{audio}" -s {cover_pix} -pix_fmt yuvj420p -t 300 -vcodec libx264 "{output}"'.format(
+            cover=cover_dir, audio=audio_dir, cover_pix=cover_pix, output=output_path)
+        os.system(command)
+
+
+class hlsWorker(object):
+    def __init__(self):
+        self.tmpdir = tempfile.mkdtemp(prefix="radiko_")
 
     def __isWindows(self):
         return 'Windows' in platform.system()
-
-    def __checkFileExist(self):
-        if not os.path.exists(self.save_dir):
-            os.mkdir(self.save_dir)
-        check_name = "{d}.raw.aac".format(d=self.timestamp)
-        save_list = os.listdir(self.save_dir)
-        if check_name in save_list:
-            print("{} Already Exist.".format(check_name))
-            exit()
-
-    def __checkCfg(self):
-        config = os.path.join(self.workdir, "config.json")
-        if os.path.exists(config):
-            with open(config, "r") as config:
-                cfg = json.loads(config.read())
-                for key, value in cfg.items():
-                    if key not in ["save_dir", "name", "proxy"]:
-                        if value == "":
-                            print("{} has no value".format(key))
-                            exit()
-            return cfg
-        else:
-            print("No config.json")
-            exit()
 
     def __checkEncode(self):
         prog_ffmpeg = subprocess.Popen("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -138,38 +161,176 @@ class radiko(object):
     def __download(self, para):
         url = para[0]
         filename = para[1]
-        r = self.requests.get(url, headers=self.headers)
+        r = session.get(url)
         with open(filename, "wb") as code:
             for chunk in r.iter_content(chunk_size=1024):
                 code.write(chunk)
 
-    def getAACURLs(self, station=None, start_at=None, end_at=None):
-        if start_at is None and end_at is None and station is None:
-            start_at = time.strftime('%Y%m%d' + self.cfg["start_at"], time.localtime(time.time()))
-            end_at = time.strftime('%Y%m%d' + self.cfg["end_at"], time.localtime(time.time()))
-            station = self.cfg["station_id"]
-            self.timestamp = time.strftime('%Y%m%d', time.localtime(time.time() - 86400))
+    def downloadAAC(self, dl_info):
+        name = dl_info["name"]
+        save_dir = dl_info["save_dir"]
+        urls = dl_info["urls"]
+        print("Total [{}]".format(str(len(urls))))
+        media_prefix = self.tmpdir
+        tmp_path = [os.path.join(media_prefix, str(index).zfill(8) + ".aac") for index, _ in enumerate(urls)]
+        t = threadProcBar(self.__download, list(zip(urls, tmp_path)), 4)
+        t.worker()
+        t.process()
+        return self.__mergeAAC(tmp_path, name, save_dir)
+
+    # 合并音频
+    def __mergeAAC(self, tmp_path, outname, save_dir):
+        stream = ""
+        outname = "{}.raw.aac".format(outname)
+        videoput = os.path.join(save_dir, outname)
+        if self.__isWindows():
+            if len(tmp_path) > 50:
+                self.__longcmd(tmp_path, self.tmpdir, videoput)
+            else:
+                for v in tmp_path:
+                    stream += os.path.join(self.tmpdir, v) + "+"
+                videoin = stream[:-1]
+                self.__concat("windows", videoin, videoput)
         else:
-            time_tag = "{}.{}.{}".format(station, start_at, end_at)
-            self.timestamp = time_tag
-        self.__checkFileExist()
+            for v in tmp_path:
+                stream += os.path.join(self.tmpdir, v) + " "
+            videoin = stream[:-1]
+            self.__concat("linux", videoin, videoput)
+        return outname
+
+
+class radiko(object):
+    def __init__(self):
+        self.workdir = os.path.dirname(os.path.abspath(__file__))
+
+        self.auth1_api = "https://radiko.jp/v2/api/auth1"
+        self.auth2_api = "https://radiko.jp/v2/api/auth2"
+        self.playlist_api = "https://radiko.jp/v2/api/ts/playlist.m3u8"
+
+    def __cfg_read(self, config):
+        if os.path.exists(config):
+            with open(config, "r") as f:
+                cfg = json.loads(f.read())
+            not_null_para = ["station_id", "start_at", "end_at"]
+            for i in not_null_para:
+                if cfg.get(i) == "":
+                    print("{} has no value".format(i))
+                    exit()
+            return cfg
+        else:
+            print("No config.json")
+            exit()
+
+    def __checkFileExist(self, file_name, save_dir):
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        file_name = file_name + ".raw.aac"
+        if file_name in os.listdir(save_dir):
+            print("{} Already Exist.".format(file_name))
+            exit()
+
+    def cli_mode(self, station, start_at, end_at, proxy):
+        cli_info = {}
+
+        name = "Radiko.{}.{}.{}".format(station, start_at, end_at)
+        save_dir = self.workdir
+
+        if proxy:
+            proxyinfo = {"http": "http://" + proxy, "https": "https://" + proxy}
+            session.proxies.update(proxyinfo)
+
+        self.__checkFileExist(name, save_dir)
+
+        urls = self.__get_aac_urls(station, start_at, end_at)
+
+        cli_info = {
+            "name": name,
+            "save_dir": save_dir,
+            "encode": "",
+            "urls": urls
+        }
+
+        return cli_info
+
+    def crond_mode(self, config):
+        crond_info = {}
+        cfg = self.__cfg_read(config)
+        name = cfg["name"]
+        station_id = cfg["station_id"]
+        start_at = cfg["start_at"]
+        end_at = cfg["end_at"]
+        next_day = cfg["next_day"]
+        encode = cfg["encode"]
+        save_dir = cfg["save_dir"]
+        cover_path = cfg["cover_path"]
+        cover_pix = cfg["cover_pix"]
+        proxy = cfg["proxy"]
+
+        start_at = time.strftime('%Y%m%d' + cfg["start_at"], time.localtime(time.time()))
+        end_at = time.strftime('%Y%m%d' + cfg["end_at"], time.localtime(time.time()))
+
+        # crond 模式适用于隔日下载，如需当天放送当天下载请使用 cli 模式
+        # next_day = true 指放送时间实际在第二天，故保存时间-1，请求则按实际时间
+        # next_day = false 指放送时间就在当天，故保存时间和请求时间均-1
+        if next_day:
+            timestamp = time.strftime('%Y%m%d', time.localtime(time.time() - 86400))
+            start_at = time.strftime('%Y%m%d' + cfg["start_at"], time.localtime(time.time()))
+            end_at = time.strftime('%Y%m%d' + cfg["end_at"], time.localtime(time.time()))
+        else:
+            timestamp = time.strftime('%Y%m%d', time.localtime(time.time() - 86400))
+            start_at = timestamp + cfg["start_at"]
+            end_at = timestamp + cfg["end_at"]
+
+        if int(start_at) > int(end_at):
+            print("Time Error")
+            exit()
+
+        if name == "":
+            name = "Radiko.{}.{}.{}".format(station_id, start_at, end_at)
+        else:
+            name = "{}.{}".format(timestamp, name)
+
+        if proxy:
+            proxyinfo = {"http": "http://" + proxy, "https": "https://" + proxy}
+            session.proxies.update(proxyinfo)
+
+        if save_dir == "":
+            save_dir == self.workdir
+
+        self.__checkFileExist(name, save_dir)
+
+        urls = self.__get_aac_urls(station_id, start_at, end_at)
+
+        crond_info = {
+            "name": name,
+            "save_dir": save_dir,
+            "cover_path": cover_path,
+            "cover_pix": cover_pix,
+            "encode": encode,
+            "urls": urls
+        }
+
+        return crond_info
+
+    def __get_aac_urls(self, station, start_at, end_at):
         # auth1
-        header_auth1 = self.headers.copy()
+        header_auth1 = {}
         header_auth1["x-radiko-device"] = "pc"
         header_auth1["x-radiko-user"] = "dummy_user"
         header_auth1["x-radiko-app"] = "pc_html5"
         header_auth1["x-radiko-app-version"] = "0.0.1"
-        auth1_res = self.requests.get(self.auth1_api, headers=header_auth1)
+        auth1_res = session.get(self.auth1_api, headers=header_auth1)
         authtoken = auth1_res.headers["X-Radiko-AuthToken"]
         offset = auth1_res.headers["X-Radiko-KeyOffset"]
         length = auth1_res.headers["X-Radiko-KeyLength"]
 
         # key
         # player_url = "http://radiko.jp/apps/js/playerCommon.js"
-        # player_text = self.requests.get(player_url, headers=self.headers).read()
+        # player_text = session.get(player_url).read()
         # key_rule = re.compile(r'new RadikoJSPlayer\(\$audio\[0\], \'pc_html5\', \'(.*?)\', {')
         # authkey = key_rule.findall(player_text, re.S | re.M)[0]
         authkey = "bcd151073c03b352e1ef2fd66c32209da9ca0afa"
+        authkey = authkey.encode(encoding='utf-8')
         with tempfile.TemporaryFile() as temp:
             temp.write(authkey)
             temp.seek(int(offset))
@@ -177,16 +338,16 @@ class radiko(object):
             partialkey = base64.b64encode(buff)
 
         # auth2
-        header_auth2 = self.headers.copy()
+        header_auth2 = {}
         header_auth2["x-radiko-device"] = "pc"
         header_auth2["x-radiko-user"] = "dummy_user"
         header_auth2["x-radiko-authtoken"] = authtoken
         header_auth2["x-radiko-partialkey"] = partialkey
-        auth2_res = self.requests.get(self.auth2_api, headers=header_auth2)
+        auth2_res = session.get(self.auth2_api, headers=header_auth2)
         ip_status = auth2_res.status_code
         area = auth2_res.text.split(",")[0]
         # playlist
-        header_play = self.headers.copy()
+        header_play = {}
         header_play["X-Radiko-AreaId"] = area
         header_play["X-Radiko-AuthToken"] = authtoken
 
@@ -199,109 +360,81 @@ class radiko(object):
             "l": "15",
             "type": "b"
         }
-        m3u8_list_res = self.requests.get(self.playlist_api, params=play_params, headers=header_play)
+        m3u8_list_res = session.get(self.playlist_api, params=play_params, headers=header_play)
         ip_status = m3u8_list_res.status_code
+
         if ip_status == 200:
             m3u8_content = m3u8_list_res.text
             chunk_rule = r'http[s]?://.*?m3u8'
             m3u8_main_url_list = re.findall(chunk_rule, m3u8_content, re.S | re.M)
             m3u8_main_url = m3u8_main_url_list[0]
             media_rule = r'(http[s]?://.*?aac)'
-            m3u8_main_res = self.requests.get(m3u8_main_url, headers=self.headers)
+            m3u8_main_res = session.get(m3u8_main_url)
             m3u8_main_content = m3u8_main_res.text
             aac_urls = re.findall(media_rule, m3u8_main_content, re.S | re.M)
             return aac_urls
         else:
-            yourip = self.requests.get("http://whatismyip.akamai.com/").text
+            yourip = session.get("http://whatismyip.akamai.com/").text
+            print("Scheduled time: {} - {}".format(start_at, end_at))
             print("IP Forbidden, Your IP: {}, Radiko Area Code: {}".format(yourip, area))
             exit()
-
-    def downloadAAC(self, urls, thread):
-        total = len(urls)
-        print("Total [{}]".format(str(total)))
-        media_prefix = self.tmpdir
-        media_path = [os.path.join(media_prefix, str(index).zfill(8) + ".aac") for index, _ in enumerate(urls)]
-        t = threadProcBar(self.__download, list(zip(urls, media_path)), thread)
-        t.worker()
-        t.process()
-        self.__mergeAAC(media_path)
-
-    # 合并音频
-    def __mergeAAC(self, media_path):
-        stream = ""
-        outname = "{d}.raw.aac".format(d=self.timestamp)
-        videoput = os.path.join(self.save_dir, outname)
-        if self.__isWindows():
-            if len(media_path) > 50:
-                self.__longcmd(media_path, self.tmpdir, videoput)
-            else:
-                for v in media_path:
-                    stream += os.path.join(self.tmpdir, v) + "+"
-                videoin = stream[:-1]
-                self.__concat("windows", videoin, videoput)
-        else:
-            for v in media_path:
-                stream += os.path.join(self.tmpdir, v) + " "
-            videoin = stream[:-1]
-            self.__concat("linux", videoin, videoput)
-
-    def aac2mp3(self, name=None):
-        name_raw = "{d}.raw.aac".format(d=self.timestamp)
-        name_mp3 = "{d}.{name}.mp3".format(
-            d=self.timestamp, name=self.save_name)
-        orig_audio = os.path.join(self.save_dir, name_raw)
-        mp3_audio = os.path.join(self.save_dir, name_mp3)
-        self.audio_path = mp3_audio
-        command = "ffmpeg -y -i {} {}".format(orig_audio, mp3_audio)
-        os.system(command)
-
-    def mp3tomp4(self, name=None):
-        cover = os.path.join(self.save_dir, "cover.png")
-        cover_pix = "480x300"
-        outname = "{d}.{name}.mp4".format(
-            d=self.timestamp, name=self.save_name)
-        save_path = os.path.join(self.save_dir, outname)
-        command = 'ffmpeg -r 15 -f image2 -loop 1 -i "{cover}" -i "{audio}" -s {cover_pix} -pix_fmt yuvj420p -t 300 -vcodec libx264 "{output}"'.format(
-            cover=cover, audio=self.audio_path, cover_pix=cover_pix, output=save_path)
-        os.system(command)
 
 
 def opts():
     # radiko.jp/#!/ts/LFR/20181002005300"
-    paras = argparse.ArgumentParser(description="Radiko Timefree download")
-    paras.add_argument('--station', dest='station', action="store", help="Station Name")
-    paras.add_argument('--start_at', dest='start_at', action="store", help="Start Time 24-hour [20180829123000]")
-    paras.add_argument('--end_at', dest='end_at', action="store", help="End Time 24-hour [20180829130000]")
-    paras.add_argument('--mp3', dest='tomp3', action="store_true", default=False, help="AAC to MP3")
-    paras.add_argument('--proxy', dest='proxy', action="store", help="proxy address")
-    paras.add_argument('-s', dest='specific', action="store_true", default=False, help="Specific radio")
-    args = paras.parse_args()
-    return args
+    parser = argparse.ArgumentParser(description="Radiko Timefree download")
+    subparsers = parser.add_subparsers(dest='cmd')
+
+    # cli with console
+    cli_parser = subparsers.add_parser('cli', help='Get the audio now')
+    cli_parser.add_argument('--station', dest='station', action="store", help="Station Name", required=True)
+    cli_parser.add_argument('--start_at', dest='start_at', action="store", help="Start Time 24-hour [20180829123000]", required=True)
+    cli_parser.add_argument('--end_at', dest='end_at', action="store", help="End Time 24-hour [20180829130000]", required=True)
+    cli_parser.add_argument('--mp3', dest='encode', action="store_true", default=False, help="AAC to MP3")
+    cli_parser.add_argument('--proxy', dest='proxy', action="store", help="proxy address")
+
+    # crond with config
+    crond_parser = subparsers.add_parser('crond', help='Use config file')
+    crond_parser.add_argument('--config', action='store', help='a config.json', required=True)
+
+    return parser.parse_args()
 
 
 def main():
     args = opts()
-    station = args.station
-    start_at = args.start_at
-    end_at = args.end_at
-    specific = args.specific
-    proxies = args.proxy
-    tomp3 = args.tomp3
-
-    r = radiko(crond=not specific, proxies=proxies)
-    if specific:
-        if station is None or start_at is None or end_at is None:
-            print("No station / start_at / end_at")
+    cmd_type = args.cmd
+    if cmd_type == "cli":
+        station = args.station
+        start_at = args.start_at
+        end_at = args.end_at
+        proxies = args.proxy
+        encode = args.encode
+        if int(start_at) > int(end_at):
+            print("Time Error")
             exit()
-        else:
-            urls = r.getAACURLs(station, start_at, end_at)
-    else:
-        urls = r.getAACURLs()
-
-    r.downloadAAC(urls, 4)
-    if r.isEncode or tomp3:
-        r.aac2mp3()
-        # r.mp3tomp4()
+        r = radiko()
+        cli_info = r.cli_mode(station, start_at, end_at, proxies)
+        hls = hlsWorker()
+        raw = hls.downloadAAC(cli_info)
+        if encode:
+            name = cli_info["name"]
+            save_dir = cli_info["save_dir"]
+            mediaWorker.aac2mp3(raw, name, save_dir)
+    elif cmd_type == "crond":
+        r = radiko()
+        config = args.config
+        crond_info = r.crond_mode(config)
+        encode = crond_info["encode"]
+        hls = hlsWorker()
+        raw = hls.downloadAAC(crond_info)
+        if encode:
+            name = crond_info["name"]
+            save_dir = crond_info["save_dir"]
+            cover_path = crond_info["cover_path"]
+            cover_pix = crond_info["cover_pix"]
+            mp3_path = mediaWorker.aac2mp3(raw, name, save_dir)
+            if cover_path != "" and cover_pix != "":
+                mediaWorker.mp3tomp4(mp3_path, cover_path, cover_pix)
 
 
 if __name__ == "__main__":
