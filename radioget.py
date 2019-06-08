@@ -24,11 +24,11 @@ except ImportError:
     import Queue as queue
 
 
-global_header = {
+HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
 }
 session = requests.Session()
-session.headers.update(global_header)
+session.headers.update(HEADERS)
 
 
 class threadProcBar(object):
@@ -129,10 +129,10 @@ class hlsWorker(object):
     # windows特殊处理
     def __longcmd(self, videolist, videofolder, videoput):
         videolist = videolist
-        totle = len(videolist)
+        total = len(videolist)
         # 将cmd的命令切割
         cut = 50
-        part = totle / cut
+        part = total // cut
         parts = []
         temp = []
         for v in videolist:
@@ -184,7 +184,7 @@ class hlsWorker(object):
         outname = "{}.raw.aac".format(outname)
         videoput = os.path.join(save_dir, outname)
         if self.__isWindows():
-            if len(tmp_path) > 50:
+            if len(tmp_path) >= 50:
                 self.__longcmd(tmp_path, self.tmpdir, videoput)
             else:
                 for v in tmp_path:
