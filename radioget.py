@@ -1,7 +1,7 @@
 # coding=utf-8
 # @author AoBeom
 # @create date 2018-10-04 13:33:50
-# @modify date 2019-02-07 15:46:12
+# @modify date 2019-07-07 22:31:56
 # @desc [radio]
 import argparse
 import base64
@@ -207,6 +207,27 @@ class radiko(object):
         self.auth2_api = "https://radiko.jp/v2/api/auth2"
         self.playlist_api = "https://radiko.jp/v2/api/ts/playlist.m3u8"
 
+        self.real_area = None
+
+    def __area_check(self):
+        timestamp = str(int((time.time() + 3600) * 1000))
+        check_url = 'http://radiko.jp/area?_={}'.format(timestamp)
+        res = session.get(check_url)
+        rule = r'document.write\(\'<span class="(.*?)">(.*?)</span>\'\);'
+        keywork = re.findall(rule, res.text)
+        if keywork:
+            keywork = keywork[0]
+            area_id = keywork[0]
+            real_area = keywork[1]
+            if area_id == "OUT":
+                print("IP OUT, Radiko thinks you live in {}".format(real_area))
+                exit()
+            else:
+                self.real_area = real_area
+        else:
+            print("Network Error")
+            exit()
+
     def __cfg_read(self, config):
         if os.path.exists(config):
             with open(config, "r") as f:
@@ -239,6 +260,7 @@ class radiko(object):
             proxyinfo = {"http": "http://" + proxy, "https": "https://" + proxy}
             session.proxies.update(proxyinfo)
 
+        self.__area_check()
         self.__checkFileExist(name, save_dir)
 
         urls = self.__get_aac_urls(station, start_at, end_at)
@@ -294,6 +316,7 @@ class radiko(object):
             proxyinfo = {"http": "http://" + proxy, "https": "https://" + proxy}
             session.proxies.update(proxyinfo)
 
+        self.__area_check()
         if save_dir == "":
             save_dir == self.workdir
 
@@ -376,7 +399,7 @@ class radiko(object):
         else:
             yourip = session.get("http://whatismyip.akamai.com/").text
             print("Scheduled time: {} - {}".format(start_at, end_at))
-            print("IP Forbidden, Your IP: {}, Radiko Area Code: {}".format(yourip, area))
+            print("IP Forbidden, Your IP: {}, Radiko Area Code: {}, Area: {}".format(yourip, area, self.real_area))
             exit()
 
 
